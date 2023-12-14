@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "csvb"
+version = "0.1.0"
+description = ""
+authors = ["Keith W. Davis <kwdprof@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jupyterlab = "^4.0.9"
+rich = "^13.7.0"
+pandas = "^2.1.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

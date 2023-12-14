@@ -1,0 +1,11 @@
+* Module `csvb` (csv banking)
+  Purpose: To read csv files from banks and facilitate create of a list of transactions that can be used to track finances and budgets.
+  The csvb banking module treats bank csvs as their records of transactios, but 
+** submodule `ingest`
+** submodule `budget`
+** submodule `plot`
+** submodule `forecast`
+
+
+
+
