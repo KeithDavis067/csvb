@@ -10,6 +10,11 @@ python = "^3.11"
 jupyterlab = "^4.0.9"
 rich = "^13.7.0"
 pandas = "^2.1.4"
+xarray = "^2023.12.0"
+numpy = "^1.26.2"
+gspread = "^5.12.3"
+flox = "^0.8.5"
+ipysheet = "^0.7.0"
 
 
 [build-system]
