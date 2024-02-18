@@ -121,20 +121,20 @@ AOP = ApplyOp
 def to_transactions(tables):
     for account in tables:
         s = pd.Series(
-            index=tables[account].index, data=account, name="From")
+            index=tables[account].index, data=account, name="To")
         try:
             df = pd.concat([df,
-                            pd.concat([bank_tables[account][
+                            pd.concat([tables[account][
                                        ["Date",
                                         "Description",
                                         "Amount",
-                                        "To"]
+                                        "From"]
                                        ], s], axis=1)],
                            axis=0)
-        except NameError:
+        except (UnboundLocalError, NameError):
             df = pd.concat([tables[account][
                             ["Date",
                              "Description",
                              "Amount",
-                             "To"]], s], axis=1).reset_index(drop=True)
-    return df
+                             "From"]], s], axis=1).reset_index(drop=True)
+    return df.sort_values("Date").reset_index(drop=True)
