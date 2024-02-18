@@ -1224,6 +1224,17 @@ files = [
 ]
 
 [[package]]
+name = "money-parser"
+version = "0.0.1"
+description = "Price and currency parsing utility"
+optional = false
+python-versions = ">=3.4"
+files = [
+    {file = "money-parser-0.0.1.tar.gz", hash = "sha256:91fb362ba851d0e789586b6a7aec39df0ee1dcb594e50e2bc60d76b90fc1f764"},
+    {file = "money_parser-0.0.1-py3-none-any.whl", hash = "sha256:93b4f312f214c54d6474052816c3ecaa8dd67a403e18d18c9001c8f4e4b8f67a"},
+]
+
+[[package]]
 name = "nbclient"
 version = "0.9.0"
 description = "A client library for executing notebooks. Formerly nbconvert's ExecutePreprocessor."
@@ -2486,4 +2497,4 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "fcd536d7cfa034c6dc86b4406dde32af6c8e87d5338edc5d3b31201a4c235442"
+content-hash = "603e65cecca591ed0ab0146dbfe4917c69d89a8cd899b271072a77811ae4fcbb"

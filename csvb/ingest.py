@@ -2,6 +2,13 @@ import pandas as pd
 from dataclasses import dataclass
 
 
+def strip_currency(s):
+    s = s.replace(",", "").replace("$", "")
+    if s.startswith("(") and s.endswith(")"):
+        s = "-" + s[1:-1]
+    return s
+
+
 def sel_factory(rule):
 
     def func(df):
@@ -33,7 +40,7 @@ def apply_rule(rule, df):
                 raise NotImplementedError
 
 
-@dataclass(init=False)
+@ dataclass(init=False)
 class SelectOp:
     op: object
     column: str
@@ -52,7 +59,7 @@ class SelectOp:
         return Rule([self, other])
 
 
-@dataclass
+@ dataclass
 class ApplyOp:
     op: object
     column: str
@@ -79,7 +86,7 @@ def _makeOp(kind, d):
     return op
 
 
-@dataclass(init=False)
+@ dataclass(init=False)
 class Rule:
     select: list[SelectOp]
     apply: list[ApplyOp]
