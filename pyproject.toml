@@ -15,7 +15,6 @@ numpy = "^1.26.2"
 gspread = "^5.12.3"
 flox = "^0.8.5"
 ipysheet = "^0.7.0"
-money-parser = "^0.0.1"
 
 
 [build-system]
