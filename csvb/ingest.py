@@ -1,5 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
+import json
 
 
 def strip_currency(s):
@@ -55,6 +56,9 @@ class SelectOp:
         self.a = a
         self.b = b
 
+    def to_json(self):
+        return json.dumps(self, cls=OpEncoder)
+
     def __add__(self, other):
         return Rule([self, other])
 
@@ -69,6 +73,9 @@ class ApplyOp:
         self.op = op
         self.column = column
         self.b = b
+
+    def to_json(self):
+        return json.dumps(self, cls=OpEncoder)
 
     def __add__(self, other):
         return Rule([self, other])
@@ -109,6 +116,9 @@ class Rule:
                     else:
                         self.__add__(_makeOp(kwarg, kwargs[kwarg]))
 
+    def to_json(self):
+        return json.dumps(self, cls=RuleEncoder)
+
     def __add__(self, other):
         if isinstance(other, ApplyOp):
             self.apply.append(other)
@@ -145,3 +155,28 @@ def to_transactions(tables):
                              "Amount",
                              "From"]], s], axis=1).reset_index(drop=True)
     return df.sort_values("Date").reset_index(drop=True)
+
+
+class RuleEncoder(json.JSONEncoder):
+    def default(self, obj):
+        d = {"type": obj.__class__.__name__}
+        try:
+            d["data"] = {"select": [o.to_json() for o in obj.select]}
+        # Shouldn't happen but in case obj.select is None
+        except TypeError:
+            d["data"] = {"select": obj.select}
+
+        try:
+            d["data"] = {"apply": [o.to_json() for o in obj.apply]}
+        # Shouldn't happen but in case obj.apply is None
+        except TypeError:
+            d["data"] = {"apply": obj.apply}
+
+        return d
+
+
+class OpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        return {"type": obj.__class__.__name__,
+                "data": obj.__dict__
+                }
