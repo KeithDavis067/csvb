@@ -48,6 +48,10 @@ class SelectOp:
     a: object
     b: object
 
+    @classmethod
+    def from_json(cls, jsonstr):
+        return _op_from_json(cls, jsonstr)
+
     def __init__(self, op, column=None, a=None, b=None):
         if column is None and a is None:
             raise TypeError("Column or a must be set.")
@@ -69,6 +73,10 @@ class ApplyOp:
     column: str
     b: object = None
 
+    @classmethod
+    def from_json(cls, jsonstr):
+        return _op_from_json(cls, jsonstr)
+
     def __init__(self, op, column, b=None):
         self.op = op
         self.column = column
@@ -85,18 +93,38 @@ class ApplyOp:
 
 
 def _makeOp(kind, d):
+    print(kind, d)
     match kind:
-        case "select":
+        case "select" | "SelectOp":
             op = SelectOp(**d)
-        case "apply":
+        case "apply" | "ApplyOp":
             op = ApplyOp(**d)
+        case _:
+            raise NotImplementedError(f"No Op of kind: {kind}")
     return op
+
+
+def _op_from_json(cls, jsonstr):
+    s = json.loads(jsonstr)
+
+    return _makeOp(s["type"], s["data"])
 
 
 @ dataclass(init=False)
 class Rule:
     select: list[SelectOp]
     apply: list[ApplyOp]
+
+    @classmethod
+    def from_json(cls, jsonstr):
+        d = json.loads(jsonstr)
+        if d["type"] != "Rule":
+            raise TypeError(f"Unable to instantiate {d['type']}"
+                            "as {cls.__name__}")
+        r = cls()
+        r.apply = [ApplyOp.from_json(ap) for ap in d["data"]["apply"]]
+        r.select = [SelectOp.from_json(sel) for sel in d["data"]["select"]]
+        return r
 
     def __init__(self, *args, **kwargs):
         self.apply = []
@@ -159,24 +187,30 @@ def to_transactions(tables):
 
 class RuleEncoder(json.JSONEncoder):
     def default(self, obj):
-        d = {"type": obj.__class__.__name__}
-        try:
-            d["data"] = {"select": [o.to_json() for o in obj.select]}
-        # Shouldn't happen but in case obj.select is None
-        except TypeError:
-            d["data"] = {"select": obj.select}
+        if isinstance(obj, Rule):
+            d = {"type": obj.__class__.__name__}
+            d["data"] = {}
+            try:
+                d["data"]["select"] = [o.to_json() for o in obj.select]
+            # Shouldn't happen but in case obj.select is None
+            except TypeError:
+                d["data"]["select"] = obj.select
 
-        try:
-            d["data"] = {"apply": [o.to_json() for o in obj.apply]}
-        # Shouldn't happen but in case obj.apply is None
-        except TypeError:
-            d["data"] = {"apply": obj.apply}
-
-        return d
+            try:
+                d["data"]["apply"] = [o.to_json() for o in obj.apply]
+            # Shouldn't happen but in case obj.apply is None
+            except TypeError:
+                d["data"]["apply"] = obj.apply
+            return d
+        else:
+            return super().default(obj)
 
 
 class OpEncoder(json.JSONEncoder):
     def default(self, obj):
-        return {"type": obj.__class__.__name__,
-                "data": obj.__dict__
-                }
+        if isinstance(obj, (SelectOp, ApplyOp)):
+            return {"type": obj.__class__.__name__,
+                    "data": obj.__dict__
+                    }
+        else:
+            return super().default(obj)
