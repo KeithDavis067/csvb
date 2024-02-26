@@ -93,7 +93,6 @@ class ApplyOp:
 
 
 def _makeOp(kind, d):
-    print(kind, d)
     match kind:
         case "select" | "SelectOp":
             op = SelectOp(**d)
