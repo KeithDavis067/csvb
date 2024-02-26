@@ -103,10 +103,27 @@ def _makeOp(kind, d):
     return op
 
 
-def _op_from_json(cls, jsonstr):
-    s = json.loads(jsonstr)
+def _op_from_json(cls, jsn):
+    try:
+        d = json.loads(jsn)
+    except TypeError:
+        d = jsn
 
-    return _makeOp(s["type"], s["data"])
+    return _makeOp(d["type"], d["data"])
+
+
+def decode_hook(obj):
+    try:
+        match obj["type"]:
+            case "Rule":
+                return Rule.from_json(obj)
+            case "SelectOp" | "ApplyOp":
+                return _makeOp(obj["type"], obj["data"])
+            case _:
+                return obj.__dict__
+    except KeyError:
+        pass
+    return obj
 
 
 @ dataclass(init=False)
@@ -115,8 +132,12 @@ class Rule:
     apply: list[ApplyOp]
 
     @classmethod
-    def from_json(cls, jsonstr):
-        d = json.loads(jsonstr)
+    def from_json(cls, jsn):
+        try:
+            d = json.loads(jsn)
+        except TypeError:
+            d = jsn
+
         if d["type"] != "Rule":
             raise TypeError(f"Unable to instantiate {d['type']}"
                             "as {cls.__name__}")
