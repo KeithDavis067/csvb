@@ -1,4 +1,5 @@
 import pandas as pd
+import tomlkit as tml
 from dataclasses import dataclass
 import json
 
@@ -41,6 +42,30 @@ def apply_rule(rule, df):
                 raise NotImplementedError
 
 
+def op_to_TOML(op):
+    tbl = tml.table()
+    for key in op.__dict__:
+        tbl.add(key, str(op.__dict__[key]))
+    return tbl
+
+
+def rule_to_TOML(rule):
+    doc = tml.document()
+
+    atab = tml.aot()
+    stab = tml.aot()
+    for r in rule.apply:
+        atab.append(r.to_TOML())
+
+    for r in rule.select:
+        stab.append(r.to_TOML())
+
+    doc.add("select", stab)
+    doc.add("apply", atab)
+
+    return doc
+
+
 @ dataclass(init=False)
 class SelectOp:
     op: object
@@ -67,6 +92,9 @@ class SelectOp:
         return Rule([self, other])
 
 
+SelectOp.to_TOML = op_to_TOML
+
+
 @ dataclass
 class ApplyOp:
     op: object
@@ -90,6 +118,9 @@ class ApplyOp:
 
     def __str__(self):
         return self.__repr__()
+
+
+ApplyOp.to_TOML = op_to_TOML
 
 
 def _makeOp(kind, d):
@@ -177,6 +208,9 @@ class Rule:
             self.apply += other.apply
         else:
             raise TypeError("Cannot add unknown rule.")
+
+
+Rule.to_TOML = rule_to_TOML
 
 
 SOP = SelectOp
