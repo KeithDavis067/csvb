@@ -2,6 +2,15 @@ import pandas as pd
 import tomlkit as tml
 from dataclasses import dataclass
 import json
+import operator
+import datetime
+
+TYPE_MAP = {float: tml.float_,
+            int: tml.integer,
+            datetime.time: tml.time,
+            datetime.datetime: tml.datetime,
+            pd.Timestamp: tml.datetime,
+            }
 
 
 def strip_currency(s):
@@ -44,8 +53,19 @@ def apply_rule(rule, df):
 
 def op_to_TOML(op):
     tbl = tml.table()
-    for key in op.__dict__:
-        tbl.add(key, str(op.__dict__[key]))
+    for key, item in op.__dict__.items():
+        # print(op, key, item)
+        # Try to match the type with the toml type.
+        try:
+            tbl.add(key, TYPE_MAP[type(item)](item))
+        except TypeError:
+            tbl.add(key, TYPE_MAP[type(item)](str(item)))
+        except KeyError:
+            try:
+                tbl.add(key, item)
+            except ValueError:
+                tbl.add(key, str(item))
+
     return tbl
 
 
@@ -73,13 +93,18 @@ class SelectOp:
     a: object
     b: object
 
-    @classmethod
+    @ classmethod
     def from_json(cls, jsonstr):
         return _op_from_json(cls, jsonstr)
 
     def __init__(self, op, column=None, a=None, b=None):
         if column is None and a is None:
             raise TypeError("Column or a must be set.")
+        try:
+            if op.startswith("<built-in function"):
+                op = getattr(operator, op[19:-1])
+        except (TypeError, AttributeError):
+            pass
         self.op = op
         self.column = column
         self.a = a
@@ -101,7 +126,7 @@ class ApplyOp:
     column: str
     b: object = None
 
-    @classmethod
+    @ classmethod
     def from_json(cls, jsonstr):
         return _op_from_json(cls, jsonstr)
 
@@ -162,7 +187,7 @@ class Rule:
     select: list[SelectOp]
     apply: list[ApplyOp]
 
-    @classmethod
+    @ classmethod
     def from_json(cls, jsn):
         try:
             d = json.loads(jsn)
