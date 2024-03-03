@@ -1,59 +1,17 @@
-title = "A list of rules for processing Apple Transactions."
+title = "A list of rules for processing 1st Source Checking Transactions."
 
 [[rules]]
 [[rules.select]]
 op = "contains"
-column = "Merchant"
+column = "Description"
 a = "None"
-b = "Banana Republic"
+b = "crossfit south"
 
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Clothing"
-
-[[rules]]
 [[rules.select]]
-op = "contains"
-column = "Merchant"
+op = "<built-in function ne>"
+column = "Amount"
 a = "None"
-b = "Apple Services"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Subscription"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Phillips 66"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Auto:Gas"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Ridge Wallet"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Gear"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Martin's Supermarket"
+b = "-225.0"
 
 [[rules.apply]]
 op = "assign"
@@ -63,33 +21,15 @@ b = "Expenses:Groceries"
 [[rules]]
 [[rules.select]]
 op = "contains"
-column = "Merchant"
+column = "Description"
 a = "None"
-b = "Apple Cash Payment"
+b = "crossfit south"
 
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Income:Apple Cash"
-
-[[rules]]
 [[rules.select]]
-op = "contains"
-column = "Merchant"
+op = "<built-in function eq>"
+column = "Amount"
 a = "None"
-b = "Hulu"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Entertainment"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Trade Coffee CO"
+b = "-225.0"
 
 [[rules.apply]]
 op = "assign"
@@ -99,165 +39,33 @@ b = "Expenses:Groceries"
 [[rules]]
 [[rules.select]]
 op = "contains"
-column = "Merchant"
+column = "Description"
 a = "None"
-b = "Beacon Med"
+b = "ND PAYROLL"
 
 [[rules.apply]]
 op = "assign"
 column = "From"
-b = "Expenses:Medical:Body"
+b = "Income:Notre Dame:Regular"
 
 [[rules]]
 [[rules.select]]
 op = "contains"
-column = "Merchant"
+column = "Description"
 a = "None"
-b = "South Bend Clinic"
+b = "INTEREST PAYMENT"
 
 [[rules.apply]]
 op = "assign"
 column = "From"
-b = "Expenses:Medical:Body"
+b = "Income:Interest"
 
 [[rules]]
 [[rules.select]]
 op = "contains"
-column = "Merchant"
+column = "Description"
 a = "None"
-b = "WMMH"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Entertainment:Self"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Account Ending In 8785"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Assets:1st Source:Checking"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "bookshop.org"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Study"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Patreon"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Entertainment"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Monthly Installments"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Liabilities:Apple:Installments"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Category"
-a = "None"
-b = "Tolls"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Auto:Tolls"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Kobo"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Entertainment:Reading"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Vtsup.com"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Entertainment:Self"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "City Of South Bend"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Utilities"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Andrasi"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Home:Cleaning"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Parlevel Texas"
-
-[[rules.apply]]
-op = "assign"
-column = "From"
-b = "Expenses:Restaurants"
-
-[[rules]]
-[[rules.select]]
-op = "contains"
-column = "Merchant"
-a = "None"
-b = "Gannett Newsprpr"
+b = "NIPSCO"
 
 [[rules.apply]]
 op = "assign"
@@ -269,9 +77,75 @@ b = "Expenses:Utilities"
 op = "contains"
 column = "Description"
 a = "None"
-b = "ABEBOOKS"
+b = "AEP"
 
 [[rules.apply]]
 op = "assign"
 column = "From"
-b = "Expenses:Study"
+b = "Expenses:Utilities"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "ALLY BANK \\$TRANSFER"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Transfer:Ally:Savings"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "VERIZON"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Utilities"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "VENMO PAYMENT"
+
+[[rules.select]]
+op = "<built-in function eq>"
+column = "Date"
+a = "None"
+b = "2024-01-03 00:00:00"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Gifts"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "KEITH W DAVIS P2P"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Transfer:Ally:Savings"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "DOVENMUEHLE MTG MORTG PYMT"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Home:Mortgage"
