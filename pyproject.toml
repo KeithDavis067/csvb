@@ -16,6 +16,7 @@ gspread = "^5.12.3"
 flox = "^0.8.5"
 ipysheet = "^0.7.0"
 tomlkit = "^0.12.4"
+plotly = "^5.19.0"
 
 
 [build-system]
