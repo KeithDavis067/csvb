@@ -21,7 +21,6 @@ def strip_currency(s):
 
 
 def sel_factory(rule):
-    print(rule)
 
     def func(df):
         bools = []
