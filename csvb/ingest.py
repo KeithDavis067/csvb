@@ -21,13 +21,14 @@ def strip_currency(s):
 
 
 def sel_factory(rule):
+    print(rule)
 
     def func(df):
         bools = []
         for sel in rule.select:
             match sel.op:
                 case pd.Series.str.contains | "contains":
-                    bools.append(df[sel.column].str.contains(sel.b))
+                    bools.append(df[sel.column].str.contains(sel.b, na=False))
                 case _:
                     try:
                         bools.append(sel.op(df[sel.column], sel.b))
