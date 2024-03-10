@@ -28,6 +28,11 @@ def sel_factory(rule):
             match sel.op:
                 case pd.Series.str.contains | "contains":
                     bools.append(df[sel.column].str.contains(sel.b, na=False))
+                case "eq":
+                    try:
+                        bools.append(operator.eq(df[sel.column], sel.b))
+                    except (TypeError, AttributeError, KeyError):
+                        bools.append(operator.eq(sel.a, sel.b))
                 case _:
                     try:
                         bools.append(sel.op(df[sel.column], sel.b))
