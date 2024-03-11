@@ -51,7 +51,11 @@ def apply_rule(rule, df):
 
         match apply.op:
             case "assign":
-                df.loc[sel_factory(rule), apply.column] = apply.b
+                try:
+                    df.loc[sel_factory(rule), apply.column] = apply.b
+                except IndexError as e:
+                    print(rule)
+                    raise e
             case "_":
                 raise NotImplementedError
 
