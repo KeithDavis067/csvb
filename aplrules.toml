@@ -1,0 +1,151 @@
+title = "A list of rules for processing 1st Source Checking Transactions."
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "crossfit south"
+
+[[rules.select]]
+op = "<built-in function ne>"
+column = "Amount"
+a = "None"
+b = "-225.0"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Groceries"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "crossfit south"
+
+[[rules.select]]
+op = "<built-in function eq>"
+column = "Amount"
+a = "None"
+b = "-225.0"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Groceries"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "ND PAYROLL"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Income:Notre Dame:Regular"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "INTEREST PAYMENT"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Income:Interest"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "NIPSCO"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Utilities"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "AEP"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Utilities"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "ALLY BANK \\$TRANSFER"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Transfer:Ally:Savings"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "VERIZON"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Utilities"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "VENMO PAYMENT"
+
+[[rules.select]]
+op = "<built-in function eq>"
+column = "Date"
+a = "None"
+b = "2024-01-03 00:00:00"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Gifts"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "KEITH W DAVIS P2P"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Transfer:Ally:Savings"
+
+[[rules]]
+[[rules.select]]
+op = "contains"
+column = "Description"
+a = "None"
+b = "DOVENMUEHLE MTG MORTG PYMT"
+
+[[rules.apply]]
+op = "assign"
+column = "From"
+b = "Expenses:Home:Mortgage"
