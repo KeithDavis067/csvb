@@ -46,6 +46,19 @@ def sel_factory(rule):
     return func
 
 
+def accounts(trans):
+    return set(trans["From"]).union(set(trans["To"]))
+
+
+def read_and_apply(df, rulepth, debug=False):
+    with open(rulepth) as f:
+        for rule in tml.load(f)["rules"]:
+            if debug:
+                print(rule)
+            apply_rule(Rule(**rule), df)
+    return df
+
+
 def apply_rule(rule, df):
     for apply in rule.apply:
 
