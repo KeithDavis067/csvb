@@ -1,9 +1,12 @@
 import pandas as pd
+import numpy as np
 import tomlkit as tml
 from dataclasses import dataclass
 import json
 import operator
 import datetime
+import pathlib
+import tomllib
 
 TYPE_MAP = {float: tml.float_,
             int: tml.integer,
@@ -71,6 +74,92 @@ def apply_rule(rule, df):
                     raise e
             case "_":
                 raise NotImplementedError
+
+
+def find_bank_files(bankpath):
+    with open(bankpath / "bank_files.toml", 'rb') as f:
+        bank = tomllib.load(f)
+    fd = {}
+    for account in bank["accounts"]:
+        fd[account["name"]] = account
+        files = []
+        # Any in main.
+        files = files + list((bankpath).glob(account["file_pattern"]))
+        # Any in 202x subdir.
+        start = bank["start"]
+        while (bankpath / str(start)).exists():
+            files = files + \
+                list((bankpath / str(start)).glob(account["file_pattern"]))
+            start = start + 1
+        fd[account["name"]]["files"] = files
+    return fd
+
+
+def ingest_bank_files(files, accountdata, rulespath):
+    dfs = []
+    for f in files:
+        dfs.append(ingest_bank_file(f, accountdata, rulespath))
+    return pd.concat(dfs)
+
+
+def ingest_bank_file(path, accountdata, rulespath):
+    kw = {}
+    for k in ["parse_dates",
+              "names",
+              "header",
+              "skiprows"]:
+        if k in accountdata:
+            kw[k] = accountdata[k]
+
+    df = pd.read_csv(path,
+                     **kw)
+
+    if "ops" in accountdata:
+        for op in accountdata["ops"]:
+            if "col2" not in op:
+                match op["op"]:
+                    case "-":
+                        try:
+                            df[op["result"]] = -1 * df[op["col1"]]
+                        except KeyError:
+                            df[op["col1"]] = -1 * df[op["col1"]]
+                    case "rename":
+                        df[op["result"]] = df[op["col1"]]
+                    case "assign":
+                        try:
+                            df[op["result"]] = df[op["col1"]]
+                        except KeyError:
+                            df[op["result"]] = op["col1"]
+                    case "strip_currency":
+                        try:
+                            df[op["col1"]] = df[op["col1"]].apply(
+                                strip_currency).astype(float)
+                        except KeyError:
+                            df["Amount"] = df[op["Amount"]].apply(
+                                strip_currency).astype(float)
+                    case "strip_white_space":
+                        df = df.rename(columns=dict(
+                            zip(df.columns, [c.strip() for c in df.columns])))
+                    case _:
+                        o = op["op"]
+                        raise NotImplementedError(f"op {o} not implemented")
+            else:
+                match op["op"]:
+                    case "nansum":
+                        df[op["result"]] = np.nansum([df[op["col1"]],
+                                                      df[op["col2"]]],
+                                                     axis=0)
+                    case _:
+                        o = op["op"]
+                        raise NotImplementedError(f"op {o} not implemented")
+    try:
+        df = read_and_apply(df, rulespath / accountdata["rules_file"])
+    except KeyError:
+        pass
+    except AttributeError as e:
+        print(df.dtypes)
+        raise e
+    return df
 
 
 def op_to_TOML(op):
@@ -271,18 +360,18 @@ def to_transactions(tables):
         try:
             df = pd.concat([df,
                             pd.concat([tables[account][
-                                       ["Date",
-                                        "Description",
-                                        "Amount",
-                                        "From"]
-                                       ], s], axis=1)],
+                                ["Date",
+                                 "Description",
+                                 "Amount",
+                                 "From"]
+                            ], s], axis=1)],
                            axis=0)
         except (UnboundLocalError, NameError):
             df = pd.concat([tables[account][
-                            ["Date",
-                             "Description",
-                             "Amount",
-                             "From"]], s], axis=1).reset_index(drop=True)
+                ["Date",
+                 "Description",
+                 "Amount",
+                 "From"]], s], axis=1).reset_index(drop=True)
     return df.sort_values("Date").reset_index(drop=True)
 
 
