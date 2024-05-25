@@ -368,6 +368,21 @@ def to_transactions(tables):
     return df.sort_values("Date").reset_index(drop=True)
 
 
+def gen_init_balance_trans(bal_decl, acct=None):
+    bal_decl = bal_decl.sort_values("Date")
+    if acct is None:
+        df = []
+        for acct in set(bal_decl["Account"]):
+            df.append(bal_decl[bal_decl["Account"] == acct].iloc[0])
+        df = pd.DataFrame(df)
+    else:
+        df = bal_decl[bal_decl["Account"] == acct].iloc[0]
+    df["From"] = "Equity:Initial Balance"
+    df["Description"] = "Initial Balance"
+    return df.rename({"Statement Balance": "Amount",
+                      "Account": "To"}, axis="columns")
+
+
 class RuleEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Rule):
@@ -485,11 +500,41 @@ def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
     # Sort and apply cumulative sum.
 
     if bal_decl is not None:
-        ledger = append_init_row(ledger, acct, bal_decl, leq=leq)
-    ledger = ledger.sort_values("Date")
-    ledger["Balance"] = ledger["Incoming Amount"].cumsum()
+        # Sorting happens in apply_balance.
+        ledger = apply_balance(ledger,
+                               bal_decl,
+                               amount_col="Incoming Amount",
+                               acct=acct)
+
+    else:
+        ledger = ledger.sort_values("Date")
 
     return ledger
+
+
+def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date"):
+    """ Filter bal_decl first or pass acct."""
+    # Select balance declarations for this account.
+    if acct is not None:
+        bd_acct = bal_decl[bal_decl["Account"] == acct]
+    else:
+        bd_acct = bal_decl
+    # Create a map of dates to values to insert rows.
+    date_to_value = pd.Series(bd_acct["Statement Balance"].values,
+                              index=bd_acct.Date).to_dict()
+    df["Balance Declaration"] = df['Date'].map(date_to_value)
+    df = df.sort_values(date_col)
+
+    # Remove all entries before initial balance.
+    try:
+        df.loc[df[df["Description"]
+                  == "Initial Balance"].index[0]:]
+    except IndexError:
+        # If no initial balance declaration, then continue.
+        pass
+
+    df["Balance"] = df[amount_col].cumsum()
+    retrun df
 
 
 def clean_ledger(ledger):
@@ -504,6 +549,13 @@ def clean_ledger(ledger):
         clean = ledger
 
     return clean
+
+
+def _last_matched_date(df, date, col="Date", get_row=False):
+    if not get_row:
+        return df.index[df[col] == pd.Timestamp(date)][-1]
+    else:
+        return df[df[col] == pd.Timestamp(date)].iloc[-1]
 
 
 def init_balance(bal_decl, acct, first_date, leq=False):
