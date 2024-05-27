@@ -527,14 +527,14 @@ def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date")
 
     # Remove all entries before initial balance.
     try:
-        df.loc[df[df["Description"]
-                  == "Initial Balance"].index[0]:]
+        df = df.loc[df[df["Description"]
+                       == "Initial Balance"].index[0]:]
     except IndexError:
         # If no initial balance declaration, then continue.
         pass
 
     df["Balance"] = df[amount_col].cumsum()
-    retrun df
+    return df
 
 
 def clean_ledger(ledger):
