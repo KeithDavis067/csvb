@@ -463,8 +463,7 @@ def create_ledgers(trans):
 
 
 def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
-    """ Craete a single ledger. This is a step to using ledgers as a view on the transactions rather than
-    a precalcualted object.
+    """ Transform a dataframe of transactions to a ledger for one account.
 
     """
     fl = trans.groupby("From")
@@ -473,8 +472,10 @@ def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
     # for acct in accounts(trans):
     # From accounts, note the negative applied to Amount.
     try:
-        df = pd.DataFrame(trans.loc[fl.groups[acct], ["Date", "Description", "To"]]).rename(
-            columns={"To": "Transaction Pair"})
+        df = pd.DataFrame(trans.loc[
+                          fl.groups[acct],
+                          ["Date", "Description", "To"]
+                          ]).rename(columns={"To": "Transaction Pair"})
         df["Incoming Amount"] = -1 * trans.loc[fl.groups[acct], "Amount"]
         ledger = df
         # If account is not in From group, skip.
@@ -482,10 +483,11 @@ def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
         pass
 
     # To accounts.
-
     try:
-        df = pd.DataFrame(trans.loc[tl.groups[acct], ["Date", "Description", "From"]]).rename(
-            columns={"From": "Transaction Pair"})
+        df = pd.DataFrame(trans.loc[
+                          tl.groups[acct],
+                          ["Date", "Description", "From"]
+                          ]).rename(columns={"From": "Transaction Pair"})
         df["Incoming Amount"] = trans.loc[tl.groups[acct], "Amount"]
         try:
             ledger = pd.concat([ledger, df])
@@ -512,9 +514,22 @@ def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
     return ledger
 
 
+def split_ledger_on_date(ledger, date, append_effective_init=True):
+    pass
+
+
 def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date"):
-    """ Filter bal_decl first or pass acct."""
-    # Select balance declarations for this account.
+    """ Apply an initial balance and return a df with the cumulative balance.
+
+    Parameters:
+        df: a Ledger or other df with a date and amount column.
+        bal_decl: A dataframe with dates and balances. If balance declaration
+            has declarations for multiple accounts, filter before passing or
+            pass 'acct' to filter in this method.
+        amount_col: The string name of the colum in 'df' to be used for amounts.
+        acct: A string with the value to filter the account column in bal_decl.
+        date_col: Alternative string value for the column containing dates.
+    """
     if acct is not None:
         bd_acct = bal_decl[bal_decl["Account"] == acct]
     else:
@@ -595,50 +610,56 @@ def append_init_row(ledger, acct, bal_decl, leq=False):
     return ledger
 
 
+def accts_to_tuples(accounts):
+    accts = set()
+    for k in accounts:
+        s = k.split(":")
+        # accts.add(tuple(s + [""] * (3 - len(s))))
+        try:
+            accts.add(tuple((s[0], "", "")))
+            accts.add(tuple((s[0], s[1], "")))
+            accts.add(tuple((s[0], s[1], s[2])))
+        except IndexError:
+            pass
+    return sorted(list(accts))
+
+
 def balances(ledgers):
-    bals = []
-    firstds = []
-    lastds = []
-    initbals = []
+    pass
+# def balance(ledger):
+#     """ Return a dataframe of the change in balance."""
+#     bals = []
+#     firstds = []
+#     lastds = []
+#     initbals = []
+#     rows = []
+#
+#     for acct in ledgers:
+#         rows.append(ledgers[acct]["Date", "Balance
 
-    for acct in ledgers:
-        bals.append(ledgers[acct]["Incoming Amount"].sum())
-
-        try:
-            firstds.append(ledgers[acct]["Date"].iloc[0])
-        except IndexError as e:
-            firstds.append(ledgers[acct]["Date"].iloc[-2:-1])
-        try:
-            lastds.append(ledgers[acct]["Date"].iloc[-1])
-        except IndexError as e:
-            lastds.append(ledgers[acct]["Date"].iloc[-2:-1])
-        initial = ledgers[acct].loc[ledgers[acct]
-                                    ["Description"] == "Initial Balance"]
-        if len(initial) != 0:
-            initbals.append(initial["Balance"].iloc[0])
-        else:
-            initbals.append(0)
-        # initbals.append(ledgers[acct]["Balance"].iloc[0])
-
-    acct_bals = pd.DataFrame({"Period Start": firstds,
-                              "Initial Balance": initbals,
-                              "Period End": lastds,
-                              "Ending Balance": bals},
-                             index=ledgers.keys())
-    acct_bals.index.name = "Account String"
-
-    acct_tpls = []
-    for ix in acct_bals.index.str.split(":"):
-        if len(ix) == 3:
-            acct_tpls.append(ix)
-        elif len(ix) == 2:
-            acct_tpls.append((ix[0], ix[1], ""))
-        elif len(ix) == 1:
-            acct_tpls.append((ix[0], "", ""))
-
-    acct_bals.index = pd.MultiIndex.from_tuples(
-        acct_tpls, names=["Type", "Account", "Subaccount"])
-    acct_bals = acct_bals.sort_index()
-    acct_bals["Difference"] = acct_bals["Ending Balance"] - \
-        acct_bals["Initial Balance"]
+    # for acct in ledgers:
+    #     bals.append(ledgers[acct]["Incoming Amount"].sum())
+    #
+    #     firstds.append(ledgers[acct]["Date"].iloc[0])
+    #     lastds.append(ledgers[acct]["Date"].iloc[-1])
+    #     initial = ledgers[acct].loc[ledgers[acct]
+    #                                 ["Description"] == "Initial Balance"]
+    #     if len(initial) != 0:
+    #         initbals.append(initial["Amount"])
+    #     else:
+    #         initbals.append(0)
+    #     # initbals.append(ledgers[acct]["Balance"].iloc[0])
+    #
+    # acct_bals = pd.DataFrame({"Period Start": firstds,
+    #                           "Initial Balance": initbals,
+    #                           "Period End": lastds,
+    #                           "Ending Balance": bals},
+    #                          index=ledgers.keys())
+    #
+    # acct_bals.index.name = "Account String"
+    #
+    # names = ["Type", "Account", "Subaccount"]
+    # acct_bals = acct_bals.sort_index()
+    # acct_bals["Difference"] = acct_bals["Ending Balance"] -
+    # acct_bals["Initial Balance"]
     return acct_bals
