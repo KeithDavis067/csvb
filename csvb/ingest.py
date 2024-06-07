@@ -414,111 +414,87 @@ class OpEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def create_ledgers(trans):
-    """ Create a ledger for each account of all from / to transactions and create balance / time column.
-    'Transaction Pair' is a terrible name, but it reminds that this is 1 half of a known transation for use
-    as a ledger of an account and running balance calculation.
-    All values appended from the "From" side of a transaction are reversed here, because a positive value
-    "From" this account subtracts from it's balance.
+def to_triple(acct, fill=None):
+    if isinstance(acct, str):
+        sp = acct.split(":")
+    else:
+        sp = acct
+    if len(sp) == 3:
+        return tuple(sp)
+    if len(sp) < 3:
+        return tuple(sp + (3 - len(sp)) * [fill])
+    if len(sp) > 3:
+        raise ValueError
+
+
+def trans_to_ledgers(trans, bal_decl=None):
+    """ Return a ledger from a df of transactios.
 
     """
-    # TODO: Add an option of a start of / end of period dates. Automatically calculate balance at
-    # beginning of period.
-    # TODO: Add processing of balance assertions to allow checks and reconciliation.
-
     fl = trans.groupby("From")
     tl = trans.groupby("To")
     ledgers = {}
     for acct in accounts(trans):
         # From accounts, note the negative applied to Amount.
         try:
-            df = pd.DataFrame(trans.loc[fl.groups[acct], ["Date", "Description", "To"]]).rename(
-                columns={"To": "Transaction Pair"})
+            df = pd.DataFrame(trans.loc[
+                fl.groups[acct],
+                ["Date", "Description", "To"]
+            ]).rename(columns={"To": "Transaction Pair"})
             df["Incoming Amount"] = -1 * trans.loc[fl.groups[acct], "Amount"]
-            ledgers[acct] = df
-        # If account is not in From group, skip.
+            ledger = df
+            # If account is not in From group, skip.
         except KeyError:
             pass
 
         # To accounts.
-
         try:
-            df = pd.DataFrame(trans.loc[tl.groups[acct], ["Date", "Description", "From"]]).rename(
-                columns={"From": "Transaction Pair"})
+            df = pd.DataFrame(trans.loc[
+                tl.groups[acct],
+                ["Date", "Description", "From"]
+            ]).rename(columns={"From": "Transaction Pair"})
             df["Incoming Amount"] = trans.loc[tl.groups[acct], "Amount"]
             try:
-                ledgers[acct] = pd.concat([ledgers[acct], df])
+                ledger = pd.concat([ledger, df])
             # If account was not also in From accounts list, don't concat.
-            except KeyError:
-                ledgers[acct] = df
+            except (NameError, UnboundLocalError):
+                ledger = df
         # If account is not in list To accounts, skip.
         except KeyError:
             pass
 
-        # Sort and apply cumulative sum.
-        ledgers[acct] = ledgers[acct].sort_values("Date")
-        ledgers[acct]["Balance"] = ledgers[acct]["Incoming Amount"].cumsum()
-
-    return ledgers
-
-
-def trans_to_ledger(trans, acct, bal_decl=None, clean=False, leq=True):
-    """ Transform a dataframe of transactions to a ledger for one account.
-
-    """
-    fl = trans.groupby("From")
-    tl = trans.groupby("To")
-    # ledgers = {}
-    # for acct in accounts(trans):
-    # From accounts, note the negative applied to Amount.
-    try:
-        df = pd.DataFrame(trans.loc[
-                          fl.groups[acct],
-                          ["Date", "Description", "To"]
-                          ]).rename(columns={"To": "Transaction Pair"})
-        df["Incoming Amount"] = -1 * trans.loc[fl.groups[acct], "Amount"]
-        ledger = df
-        # If account is not in From group, skip.
-    except KeyError:
-        pass
-
-    # To accounts.
-    try:
-        df = pd.DataFrame(trans.loc[
-                          tl.groups[acct],
-                          ["Date", "Description", "From"]
-                          ]).rename(columns={"From": "Transaction Pair"})
-        df["Incoming Amount"] = trans.loc[tl.groups[acct], "Amount"]
-        try:
-            ledger = pd.concat([ledger, df])
-        # If account was not also in From accounts list, don't concat.
-        except (NameError, UnboundLocalError):
-            ledger = df
-    # If account is not in list To accounts, skip.
-    except KeyError:
-        pass
-    if clean:
-        ledger = clean_ledger(ledger)
-    # Sort and apply cumulative sum.
-
-    if bal_decl is not None:
-        # Sorting happens in apply_balance.
         ledger = apply_balance(ledger,
-                               bal_decl,
-                               amount_col="Incoming Amount",
-                               acct=acct)
+                               amount_col="Incoming Amount")
 
-    else:
         ledger = ledger.sort_values("Date")
+        ledger["Account"] = acct
+        ledgers[acct] = ledger
 
-    return ledger
+    ledgers = pd.concat(list(ledgers.values()), axis=0)
+    return ledgers.sort_values("Date").reset_index(drop=True)
 
 
 def split_ledger_on_date(ledger, date, append_effective_init=True):
     pass
 
 
-def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date"):
+def apply_bal_decl(df, bal_decl, acct=None, date_col=None):
+    if date_col is None:
+        date_cole = "Date"
+    if acct is not None:
+        bd_acct = bal_decl[bal_decl["Account"] == acct]
+    else:
+        bd_acct = bal_decl
+
+    # Create a map of dates to values to insert rows.
+    date_to_value = pd.Series(bd_acct["Statement Balance"].values,
+                              index=bd_acct.Date).to_dict()
+    df["Balance Declaration"] = df['Date'].map(date_to_value)
+    df = df.sort_values(date_col)
+    return df
+
+
+def apply_balance(df, amount_col="Amount", date_col="Date"):
     """ Apply an initial balance and return a df with the cumulative balance.
 
     Parameters:
@@ -530,15 +506,6 @@ def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date")
         acct: A string with the value to filter the account column in bal_decl.
         date_col: Alternative string value for the column containing dates.
     """
-    if acct is not None:
-        bd_acct = bal_decl[bal_decl["Account"] == acct]
-    else:
-        bd_acct = bal_decl
-    # Create a map of dates to values to insert rows.
-    date_to_value = pd.Series(bd_acct["Statement Balance"].values,
-                              index=bd_acct.Date).to_dict()
-    df["Balance Declaration"] = df['Date'].map(date_to_value)
-    df = df.sort_values(date_col)
 
     # Remove all entries before initial balance.
     try:
@@ -547,7 +514,7 @@ def apply_balance(df, bal_decl, amount_col="Amount", acct=None, date_col="Date")
     except IndexError:
         # If no initial balance declaration, then continue.
         pass
-
+    df = df.sort_values(date_col)
     df["Balance"] = df[amount_col].cumsum()
     return df
 
