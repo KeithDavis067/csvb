@@ -109,8 +109,11 @@ def ingest_bank_file(path, accountdata, rulespath):
               "header",
               "skiprows"]:
         if k in accountdata:
-            kw[k] = accountdata[k]
-
+            # TOML can't store None.
+            if accountdata[k] == "None":
+                kw[k] = None
+            else:
+                kw[k] = accountdata[k]
     df = pd.read_csv(path,
                      **kw)
 
